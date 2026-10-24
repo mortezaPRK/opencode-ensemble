@@ -399,7 +399,8 @@ Configure via JSON files, environment variables, or both. Project config overrid
   "modelPool": ["anthropic/claude-opus-4-7", "anthropic/claude-sonnet-4-6", "openai/gpt-5.4"],
   "modelsByAgent": {},
   "modelAssignment": "default",
-  "promptForModels": false
+  "promptForModels": false,
+  "allowWorktreePermissions": false
 }
 ```
 
@@ -422,6 +423,7 @@ All fields are optional. Missing fields use defaults.
 | `modelsByAgent` | `{}` | Map agent type to model (e.g. `{"build": "anthropic/claude-opus-4-7"}`). |
 | `modelAssignment` | `"default"` | How to assign models: `"default"`, `"rotate"`, or `"random"`. |
 | `promptForModels` | `false` | Lead asks user about model preferences before spawning. |
+| `allowWorktreePermissions` | `false` | Opt in to automatically allow worktree teammates broad `edit` and `bash` permissions. When false, Ensemble does not blanket-allow these tools; OpenCode's agent/user permission configuration and normal permission prompts remain in effect. |
 
 ### Environment variables
 

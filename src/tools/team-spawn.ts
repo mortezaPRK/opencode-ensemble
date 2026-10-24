@@ -150,7 +150,8 @@ export async function executeTeamSpawn(
 
   // Permission rules on session.create are the hard gate (server-enforced).
   // For read-only agents, deny write tools and explicitly allow team tools.
-  // For all agents with worktrees, allowlist the worktree path for edit/bash.
+  // Broad worktree edit/bash allows are opt-in; otherwise the host's normal
+  // permission rules and prompting flow decide whether these tools are allowed.
   // The 9 member-accessible tools per the documented tool table: the 6 worker
   // tools plus the 3 inspection tools (team_results/team_status/team_view —
   // any member). Caught live 2026-09-15: teammates could not read each
@@ -168,7 +169,7 @@ export async function executeTeamSpawn(
   ] as const
   const permission: PermissionRule[] = []
 
-  if (worktreeDir) {
+  if (worktreeDir && deps.config.allowWorktreePermissions) {
     permission.push(
       { permission: "edit", pattern: `${worktreeDir}/**`, action: "allow" },
       // V2 checks files inside the session's location as paths relative to

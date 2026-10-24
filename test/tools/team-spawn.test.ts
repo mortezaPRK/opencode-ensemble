@@ -824,6 +824,7 @@ describe("team_spawn — agent mode enforcement", () => {
   })
 
   test("build agent gets worktree allow + team tool allow rules (no deny)", async () => {
+    deps.config.allowWorktreePermissions = true
     await executeTeamSpawn(deps, { name: "builder", agent: "build", prompt: "Build it" }, "lead-sess")
 
     const createCall = deps.client.calls.find(c => c.method === "session.create")

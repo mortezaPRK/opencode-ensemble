@@ -110,6 +110,26 @@ describe("v2-client adapter (issue #36, DRY: reuses all tool logic)", () => {
     })
   })
 
+  test("session.create preserves permission order and maps bash to shell", async () => {
+    const { calls, ctx } = mockCtx()
+    const client = createV2Client(ctx as never)
+    await client.session.create({
+      title: "worker",
+      permission: [
+        { permission: "edit", pattern: "*", action: "allow" },
+        { permission: "bash", pattern: "*", action: "allow" },
+        { permission: "team_message", pattern: "*", action: "allow" },
+      ],
+    })
+    expect(calls[0]?.input).toMatchObject({
+      permissions: [
+        { action: "edit", resource: "*", effect: "allow" },
+        { action: "shell", resource: "*", effect: "allow" },
+        { action: "team_message", resource: "*", effect: "allow" },
+      ],
+    })
+  })
+
   test("session.promptAsync maps synthetic wakes to session.synthetic", async () => {
     const { calls, ctx } = mockCtx()
     const client = createV2Client(ctx as never)

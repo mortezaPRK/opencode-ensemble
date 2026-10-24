@@ -73,6 +73,28 @@ describe("branch preservation", () => {
     expect(after.status).toBe("shutdown")
   })
 
+  test("worktree edit/bash permissions are not blanket-allowed by default", async () => {
+    await executeTeamCreate(deps, { name: "permission-default" }, lead)
+    await executeTeamSpawn(deps, { name: "worker", agent: "build", prompt: "task" }, lead)
+
+    const create = deps.client.calls.find((call) => call.method === "session.create")
+    const options = create?.args[0] as { permission?: Array<{ permission: string; action: string }> }
+    expect(options.permission?.some((rule) => rule.permission === "edit" && rule.action === "allow")).toBe(false)
+    expect(options.permission?.some((rule) => rule.permission === "bash" && rule.action === "allow")).toBe(false)
+    expect(options.permission?.some((rule) => rule.permission === "team_message" && rule.action === "allow")).toBe(true)
+  })
+
+  test("allowWorktreePermissions opts into broad worktree edit/bash allows", async () => {
+    deps.config.allowWorktreePermissions = true
+    await executeTeamCreate(deps, { name: "permission-opt-in" }, lead)
+    await executeTeamSpawn(deps, { name: "worker", agent: "build", prompt: "task" }, lead)
+
+    const create = deps.client.calls.find((call) => call.method === "session.create")
+    const options = create?.args[0] as { permission?: Array<{ permission: string; pattern: string; action: string }> }
+    expect(options.permission?.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "allow")).toBe(true)
+    expect(options.permission?.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "allow")).toBe(true)
+  })
+
   test("shutdown still completes if preserve fails", async () => {
     await executeTeamCreate(deps, { name: "fail-preserve" }, lead)
     await executeTeamSpawn(deps, { name: "bob", agent: "build", prompt: "task" }, lead)
