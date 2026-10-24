@@ -49,10 +49,27 @@ describe("dashboard", () => {
       const res = await fetch(`http://localhost:${port}/api/health`)
       expect(res.status).toBe(200)
       expect(res.headers.get("content-type")).toContain("application/json")
-      expect(res.headers.get("access-control-allow-origin")).toBe("*")
+      expect(res.headers.get("access-control-allow-origin")).toBeNull()
       const body = (await res.json()) as HealthResponse
       expect(body.ensemble).toBe(true)
       expect(typeof body.pid).toBe("number")
+    })
+
+    test("rejects a hostile Host header without serving dashboard data", async () => {
+      server = await startDashboard(db, port)
+      const response = await fetch(`http://127.0.0.1:${port}/api/health`, {
+        headers: { Host: `attacker.example:${port}` },
+      })
+      expect(response.status).toBe(421)
+      expect(response.headers.get("access-control-allow-origin")).toBeNull()
+    })
+
+    test("accepts localhost and loopback Host headers", async () => {
+      server = await startDashboard(db, port)
+      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`]) {
+        const response = await fetch(`http://127.0.0.1:${port}/api/health`, { headers: { Host: host } })
+        expect(response.status).toBe(200)
+      }
     })
   })
 
@@ -61,7 +78,7 @@ describe("dashboard", () => {
       server = await startDashboard(db, port)
       const res = await fetch(`http://localhost:${port}/api/state`)
       expect(res.status).toBe(200)
-      expect(res.headers.get("access-control-allow-origin")).toBe("*")
+      expect(res.headers.get("access-control-allow-origin")).toBeNull()
       const body = (await res.json()) as StateResponse
       expect(body).toEqual({ version: 1, projects: [], teams: [] })
     })

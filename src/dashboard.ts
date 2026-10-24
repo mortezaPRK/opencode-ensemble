@@ -216,7 +216,6 @@ export interface DashboardOptions {
 function sendJson(res: ServerResponse, data: unknown): void {
   res.writeHead(200, {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
   })
   res.end(JSON.stringify(data))
 }
@@ -335,6 +334,11 @@ function handleDashboardRequest(
   res: ServerResponse,
   options?: DashboardOptions,
 ): void {
+  if (!isAllowedHost(req.headers.host, port)) {
+    res.writeHead(421, { "Content-Type": "text/plain" })
+    res.end("Misdirected Request")
+    return
+  }
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? `localhost:${port}`}`)
 
   if (url.pathname === "/api/health") {
@@ -367,6 +371,19 @@ function handleDashboardRequest(
 
   res.writeHead(404, { "Content-Type": "text/plain" })
   res.end("Not Found")
+}
+
+/** Accept only localhost and loopback Host values for this listener. */
+function isAllowedHost(host: string | undefined, port: number): boolean {
+  if (!host) return false
+  const normalized = host.toLowerCase()
+  const validHosts = new Set(["localhost", "127.0.0.1", "[::1]"])
+  try {
+    const parsed = new URL(`http://${normalized}`)
+    return validHosts.has(parsed.hostname) && parsed.port === String(port) && parsed.username === "" && parsed.password === ""
+  } catch {
+    return false
+  }
 }
 
 function toDashboardServer(server: Server): DashboardServer {
@@ -424,7 +441,7 @@ export async function startDashboard(db: Database, port: number, options?: Dashb
       resolve(null)
     })
 
-    server.listen(port, () => {
+    server.listen(port, "127.0.0.1", () => {
       log(`dashboard:started port=${port} url=http://localhost:${port}`)
       resolve(toDashboardServer(server))
     })
