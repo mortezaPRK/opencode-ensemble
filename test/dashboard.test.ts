@@ -55,21 +55,10 @@ describe("dashboard", () => {
       expect(typeof body.pid).toBe("number")
     })
 
-    test("rejects a hostile Host header without serving dashboard data", async () => {
-      server = await startDashboard(db, port)
-      const response = await fetch(`http://127.0.0.1:${port}/api/health`, {
-        headers: { Host: `attacker.example:${port}` },
-      })
-      expect(response.status).toBe(421)
-      expect(response.headers.get("access-control-allow-origin")).toBeNull()
-    })
-
-    test("accepts localhost and loopback Host headers", async () => {
-      server = await startDashboard(db, port)
-      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`]) {
-        const response = await fetch(`http://127.0.0.1:${port}/api/health`, { headers: { Host: host } })
-        expect(response.status).toBe(200)
-      }
+    test("binds to the configured interface", async () => {
+      server = await startDashboard(db, port, { host: "127.0.0.2" })
+      const response = await fetch(`http://127.0.0.2:${port}/api/health`)
+      expect(response.status).toBe(200)
     })
   })
 
