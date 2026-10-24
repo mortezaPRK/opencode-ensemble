@@ -40,6 +40,7 @@ describe("config", () => {
   test("returns defaults when no config files exist", () => {
     const config = loadConfig(tmpDir)
     expect(config).toEqual(DEFAULT_CONFIG)
+    expect(config.allowWorktreePermissions).toBe(false)
   })
 
   test("project config overrides defaults", () => {
@@ -69,6 +70,14 @@ describe("config", () => {
     mkdirSync(configDir, { recursive: true })
     writeFileSync(path.join(configDir, "ensemble.json"), JSON.stringify({ dashboardHost: "0.0.0.0" }))
     expect(loadConfig(tmpDir).dashboardHost).toBe("0.0.0.0")
+  })
+
+  test("loads allowWorktreePermissions from project config", () => {
+    const configDir = path.join(tmpDir, ".opencode")
+    mkdirSync(configDir, { recursive: true })
+    writeFileSync(path.join(configDir, "ensemble.json"), JSON.stringify({ allowWorktreePermissions: true }))
+
+    expect(loadConfig(tmpDir).allowWorktreePermissions).toBe(true)
   })
 
   test("invalid JSON logs warning and returns defaults", () => {

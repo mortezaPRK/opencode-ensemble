@@ -33,6 +33,8 @@ export interface EnsembleConfig {
   modelAssignment?: "default" | "rotate" | "random"
   /** Lead asks user about model preferences before spawning (default: false) */
   promptForModels?: boolean
+  /** Allow worktree teammates broad edit and bash permissions (default: false) */
+  allowWorktreePermissions?: boolean
 }
 
 /** Default configuration values. */
@@ -52,6 +54,7 @@ export const DEFAULT_CONFIG: Required<EnsembleConfig> = {
   modelsByAgent: {},
   modelAssignment: "default",
   promptForModels: false,
+  allowWorktreePermissions: false,
 }
 
 /** Read a JSON config file, returning an empty object on missing/invalid. */
@@ -79,6 +82,7 @@ function readConfigFile(filePath: string): Partial<EnsembleConfig> {
     }
     if (typeof raw.modelAssignment === "string" && ["default", "rotate", "random"].includes(raw.modelAssignment)) result.modelAssignment = raw.modelAssignment as "default" | "rotate" | "random"
     if (typeof raw.promptForModels === "boolean") result.promptForModels = raw.promptForModels
+    if (typeof raw.allowWorktreePermissions === "boolean") result.allowWorktreePermissions = raw.allowWorktreePermissions
     return result
   } catch (err) {
     if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") return {}
